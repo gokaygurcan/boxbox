@@ -1,0 +1,123 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  NODE_VERSION: '10.x'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    steps:
+    - id: setup-node
+      name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - id: checkout
+      name: Checkout
+      uses: actions/checkout@v2
+
+    - id: sanity-check
+      name: Sanity check
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+        JOB_CONTEXT: ${{ toJson(job) }}
+        STEPS_CONTEXT: ${{ toJson(steps) }}
+        RUNNER_CONTEXT: ${{ toJson(runner) }}
+        STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+        MATRIX_CONTEXT: ${{ toJson(matrix) }}
+      run: |
+        printenv
+        echo "$PATH"
+        echo "$GITHUB_CONTEXT"
+        echo "$JOB_CONTEXT"
+        echo "$STEPS_CONTEXT"
+        echo "$RUNNER_CONTEXT"
+        echo "$STRATEGY_CONTEXT"
+        echo "$MATRIX_CONTEXT"
+        which node
+        node --version
+        which npm
+        npm --version
+        which grunt
+        grunt --version
+        which make
+        make --version
+        which jq
+        jq --version
+        pwd
+        ls -lah .
+
+    - id: cache-dependencies
+      name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          **/node_modules
+          **/.cache
+        key: node-modules-${{ hashFiles('package.json') }}
+
+    - id: install-dependencies
+      name: Install dependencies
+      if: |
+        (steps.cache-dependencies.outputs.cache-hit != 'true')
+      run: |
+        npm install
+
+  labels:
+    name: Labels
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push'
+    needs: [ setup ]
+    steps:
+    - id: setup-node
+      name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - id: checkout
+      name: Checkout
+      uses: actions/checkout@v2
+
+    - id: cache-dependencies
+      name: Cache dependencies
+      uses: actions/cache@v2
+      with:
+        path: |
+          **/node_modules
+          **/.cache
+        key: node-modules-${{ hashFiles('package.json') }}
+
+    - id: find
+      name: Find
+      uses: actions/github-script@v4
+      with:
+        github-token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
+        debug: true
+        result-encoding: string
+        script: |
+          const owner = context.payload.repository.owner.login;
+          const repo = context.payload.repository.name;
+          
+          const pulls = await github.pulls.list({ owner, repo, state: 'open', per_page: 100, page: 1 }).catch(console.log);
+          const labels = await github.issues.listLabelsForRepo({ owner, repo });
+          
+          core.info(typeof pulls);
+          core.info(JSON.stringify(pulls));
+          
+          core.info(typeof labels);
+          core.info(JSON.stringify(labels));
+          
+          return '';
