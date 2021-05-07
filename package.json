@@ -1,0 +1,10 @@
+{
+    "name": "@gokaygurcan/boxbox",
+    "version": "1.0.0",
+    "private": true,
+    "repository": "gokaygurcan/boxbox",
+    "license": "MIT",
+    "dependencies": {
+        "lodash": "5.0.0"
+    }
+}
