@@ -103,19 +103,35 @@ jobs:
     - id: find
       name: Find
       uses: actions/github-script@v4
+      env:
+        NUMBER_OF_CICD_SANDBOXES: ${{ secret.NUMBER_OF_CICD_SANDBOXES }}
       with:
         github-token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
         debug: true
         result-encoding: string
         script: |
+          const _ = require('lodash');
+          const { NUMBER_OF_CICD_SANDBOXES } = process.env;
+          
           const owner = context.payload.repository.owner.login;
           const repo = context.payload.repository.name;
           
+          core.startGroup('pulls');
           const pulls = await github.pulls.list({ owner, repo, state: 'open', per_page: 100, page: 1 }).catch(core.error);
           core.info(JSON.stringify(pulls.data));
+          core.endGroup();
           
-          const labels = pulls.data.map((pull) => pull.labels.filter((label) => label.name.startsWith('abcd')));
-          
+          core.startGroup('labels');
+          const labels = pulls.data.map((pull) => pull.labels.filter((label) => label.name.startsWith('abcd')).map((label) => label.name)[0]).sort((l1, l2) => l1 > l2);
           core.info(labels);
+          core.endGroup();
+          
+          core.startGroup('diff');
+          const sandboxes = Array.from({ length: NUMBER_OF_CICD_SANDBOXES }, (_, i) => `abcd-${(i + 1).toString().padStart(3, '0')}`);
+          const diff = _.difference(labels, sandboxes);
+          core.info(sandboxes);
+          core.info(labels);
+          core.info(diff);
+          core.endGroup();
           
           return '';
