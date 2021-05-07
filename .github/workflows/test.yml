@@ -114,7 +114,7 @@ jobs:
           const pulls = await github.pulls.list({ owner, repo, state: 'open', per_page: 100, page: 1 }).catch(core.error);
           core.info(JSON.stringify(pulls.data));
           
-          const labels = pulls.data.map((pull) => pull.labels.filter((label) => label.name.startsWith('abcd'));
+          const labels = pulls.data.map((pull) => pull.labels.filter((label) => label.name.startsWith('abcd')));
           
           core.info(labels);
           
