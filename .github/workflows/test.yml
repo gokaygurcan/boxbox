@@ -111,13 +111,13 @@ jobs:
           const owner = context.payload.repository.owner.login;
           const repo = context.payload.repository.name;
           
-          const pulls = await github.pulls.list({ owner, repo, state: 'open', per_page: 100, page: 1 }).catch(console.log);
-          const labels = await github.issues.listLabelsForRepo({ owner, repo });
+          const pulls = await github.pulls.list({ owner, repo, state: 'open', per_page: 100, page: 1 }).catch(core.error);
+          core.info(JSON.stringify(pulls.data));
           
-          core.info(typeof pulls);
-          core.info(JSON.stringify(pulls));
+          const labels = pulls.data.map((pull) => {
+            return pull.labels.name;
+          });
           
-          core.info(typeof labels);
-          core.info(JSON.stringify(labels));
+          core.info(labels);
           
           return '';
