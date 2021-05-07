@@ -104,7 +104,7 @@ jobs:
       name: Find
       uses: actions/github-script@v4
       env:
-        NUMBER_OF_CICD_SANDBOXES: ${{ secret.NUMBER_OF_CICD_SANDBOXES }}
+        NUMBER_OF_CICD_SANDBOXES: ${{ secrets.NUMBER_OF_CICD_SANDBOXES }}
       with:
         github-token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
         debug: true
