@@ -111,7 +111,8 @@ jobs:
         result-encoding: string
         script: |
           const _ = require('lodash');
-          const { NUMBER_OF_CICD_SANDBOXES } = process.env;
+          
+          const NUMBER_OF_CICD_SANDBOXES = parseInt(process.env.NUMBER_OF_CICD_SANDBOXES) / 1000000;
           
           const owner = context.payload.repository.owner.login;
           const repo = context.payload.repository.name;
@@ -128,10 +129,15 @@ jobs:
           
           core.startGroup('diff');
           const sandboxes = Array.from({ length: NUMBER_OF_CICD_SANDBOXES }, (_, i) => `abcd-${(i + 1).toString().padStart(3, '0')}`);
-          const diff = _.difference(labels, sandboxes);
+          const diff = _.difference(sandboxes, labels);
           core.info(sandboxes);
           core.info(labels);
           core.info(diff);
+          core.endGroup();
+          
+          core.startGroup('target');
+          const target = diff[0];
+          core.info(target);
           core.endGroup();
           
           return '';
